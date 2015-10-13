@@ -12,7 +12,7 @@ describe('ngView', function() {
   }));
 
 
-  afterEach(function(){
+  afterEach(function() {
     dealoc(element);
   });
 
@@ -56,7 +56,7 @@ describe('ngView', function() {
   });
 
 
-  it('should instantiate controller for empty template', function() {
+  it('should instantiate the associated controller when an empty template is downloaded', function() {
     var log = [], controllerScope,
         Ctrl = function($scope) {
           controllerScope = $scope;
@@ -70,11 +70,12 @@ describe('ngView', function() {
     inject(function($route, $rootScope, $templateCache, $location) {
       $templateCache.put('/tpl.html', [200, '', {}]);
       $location.path('/some');
-      $rootScope.$digest();
 
-      expect(controllerScope.$parent).toBe($rootScope);
-      expect(controllerScope).toBe($route.current.scope);
-      expect(log).toEqual(['ctrl-init']);
+      expect(function() {
+        $rootScope.$digest();
+      }).not.toThrow();
+
+      expect(controllerScope).toBeDefined();
     });
   });
 
@@ -500,8 +501,7 @@ describe('ngView', function() {
 
       $location.url('/foo');
       $rootScope.$digest();
-      // using toMatch because in IE8+jquery the space doesn't get preserved. jquery bug?
-      expect(element.text()).toMatch(/\s*WORKS/);
+      expect(element.text()).toEqual('   \n   WORKS');
 
       var div = element.find('div');
       expect(div.parent()[0].nodeName.toUpperCase()).toBeOneOf('NG:VIEW', 'VIEW');
@@ -527,10 +527,10 @@ describe('ngView', function() {
       $rootScope.$digest();
 
       angular.forEach(element.contents(), function(node) {
-        if(node.nodeType == 3 /* text node */) {
+        if (node.nodeType == 3 /* text node */) {
           expect(angular.element(node).scope()).not.toBe($route.current.scope);
           expect(angular.element(node).controller()).not.toBeDefined();
-        } else if(node.nodeType == 8 /* comment node */) {
+        } else if (node.nodeType == 8 /* comment node */) {
           expect(angular.element(node).scope()).toBe(element.scope());
           expect(angular.element(node).controller()).toBe(element.controller());
         } else {
@@ -589,7 +589,7 @@ describe('ngView and transcludes', function() {
     });
   });
 
-  it("should compile it's content correctly (although we remove it later)", function() {
+  it("should compile its content correctly (although we remove it later)", function() {
     var testElement;
     module(function($compileProvider, $routeProvider) {
       $routeProvider.when('/view', {template: ' '});
@@ -672,7 +672,7 @@ describe('ngView animations', function() {
     };
   }));
 
-  afterEach(function(){
+  afterEach(function() {
     dealoc(body);
     dealoc(element);
   });
@@ -712,7 +712,6 @@ describe('ngView animations', function() {
       $location.path('/foo');
       $rootScope.$digest();
 
-      $animate.triggerCallbacks();
 
       $location.path('/');
       $rootScope.$digest();
@@ -750,7 +749,7 @@ describe('ngView animations', function() {
     );
 
     it('should render ngClass on ngView',
-      inject(function($compile, $rootScope, $templateCache, $animate, $location, $timeout) {
+      inject(function($compile, $rootScope, $templateCache, $animate, $location) {
 
         var item;
         $rootScope.tpl = 'one';
@@ -760,6 +759,7 @@ describe('ngView animations', function() {
 
         $location.path('/foo');
         $rootScope.$digest();
+        $animate.flush();
 
         //we don't care about the enter animation
         $animate.queue.shift();
@@ -773,7 +773,10 @@ describe('ngView animations', function() {
         $rootScope.klass = 'boring';
         $rootScope.$digest();
 
-        expect($animate.queue.shift().event).toBe('setClass');
+        expect($animate.queue.shift().event).toBe('addClass');
+        expect($animate.queue.shift().event).toBe('removeClass');
+
+        $animate.flush();
 
         expect(item.hasClass('classy')).toBe(false);
         expect(item.hasClass('boring')).toBe(true);
@@ -833,6 +836,8 @@ describe('ngView animations', function() {
         expect($animate.queue.shift().event).toBe('enter'); //ngRepeat 3
         expect($animate.queue.shift().event).toBe('enter'); //ngRepeat 4
 
+        $animate.flush();
+
         expect(element.text()).toEqual('34');
 
         function n(text) {
@@ -841,20 +846,8 @@ describe('ngView animations', function() {
       });
     });
 
-    it('should destroy the previous leave animation if a new one takes place', function() {
-      module(function($provide) {
-        $provide.value('$animate', {
-          enabled : function() { return true; },
-          leave : function() {
-            //DOM operation left blank
-          },
-          enter : function(element, parent, after) {
-            angular.element(after).after(element);
-          }
-        });
-      });
-      inject(function ($compile, $rootScope, $animate, $location) {
-        var item;
+    it('should destroy the previous leave animation if a new one takes place',
+      inject(function($compile, $rootScope, $animate, $location, $timeout) {
         var $scope = $rootScope.$new();
         element = $compile(html(
           '<div>' +
@@ -882,12 +875,12 @@ describe('ngView animations', function() {
         $rootScope.$digest();
 
         expect(destroyed).toBe(true);
-      });
-    });
+      })
+    );
   });
 
 
-  describe('autoscroll', function () {
+  describe('autoscroll', function() {
     var autoScrollSpy;
 
     function spyOnAnchorScroll() {
@@ -922,9 +915,11 @@ describe('ngView animations', function() {
 
       $location.path('/foo');
       $rootScope.$digest();
-      expect($animate.queue.shift().event).toBe('enter');
-      $animate.triggerCallbacks();
 
+      $animate.flush();
+      $rootScope.$digest();
+
+      expect($animate.queue.shift().event).toBe('enter');
       expect(autoScrollSpy).toHaveBeenCalledOnce();
     }));
 
@@ -936,9 +931,11 @@ describe('ngView animations', function() {
       $rootScope.value = true;
       $location.path('/foo');
       $rootScope.$digest();
-      expect($animate.queue.shift().event).toBe('enter');
-      $animate.triggerCallbacks();
 
+      $animate.flush();
+      $rootScope.$digest();
+
+      expect($animate.queue.shift().event).toBe('enter');
       expect(autoScrollSpy).toHaveBeenCalledOnce();
     }));
 
@@ -950,7 +947,6 @@ describe('ngView animations', function() {
       $location.path('/foo');
       $rootScope.$digest();
       expect($animate.queue.shift().event).toBe('enter');
-      $animate.triggerCallbacks();
 
       expect(autoScrollSpy).not.toHaveBeenCalled();
     }));
@@ -964,7 +960,6 @@ describe('ngView animations', function() {
       $location.path('/foo');
       $rootScope.$digest();
       expect($animate.queue.shift().event).toBe('enter');
-      $animate.triggerCallbacks();
 
       expect(autoScrollSpy).not.toHaveBeenCalled();
     }));
@@ -981,7 +976,9 @@ describe('ngView animations', function() {
         expect(autoScrollSpy).not.toHaveBeenCalled();
 
         expect($animate.queue.shift().event).toBe('enter');
-        $animate.triggerCallbacks();
+
+        $animate.flush();
+        $rootScope.$digest();
 
         expect($animate.enter).toHaveBeenCalledOnce();
         expect(autoScrollSpy).toHaveBeenCalledOnce();

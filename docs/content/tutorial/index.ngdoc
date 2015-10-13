@@ -18,7 +18,7 @@ extensions or plug-ins:
 
 * See examples of how to use client-side data binding to build dynamic views of data that change
   immediately in response to user actions.
-* See how Angular keeps your views in synch with your data without the need for DOM manipulation.
+* See how Angular keeps your views in sync with your data without the need for DOM manipulation.
 * Learn a better, easier way to test your web apps, with Karma and Protractor.
 * Learn how to use dependency injection and services to make common web tasks, such as getting data
   into your app, easier.
@@ -44,8 +44,8 @@ really digging into it. If you're looking for a shorter introduction to AngularJ
 
 # Get Started
 
-The rest of this page explains how you can set up your machine to work with the code on your local
-machine.  If you just want to read the tutorial then you can just go straight to the first step:
+The rest of this page explains how you can set up your local machine for development.
+If you just want to read the tutorial then you can just go straight to the first step:
 [Step 0 - Bootstrapping](tutorial/step_00).
 
 # Working with the code
@@ -95,7 +95,7 @@ The tutorial instructions, from now on, assume you are running all commands from
 ### Install Node.js
 
 If you want to run the preconfigured local web-server and the test tools then you will also need
-[Node.js v0.10+][node].
+[Node.js v0.10.27+][node].
 
 You can download a Node.js installer for your operating system from http://nodejs.org/download/.
 
@@ -105,7 +105,18 @@ Check the version of Node.js that you have installed by running the following co
 node --version
 ```
 
-<div class="alert alert-info">If you need to run a different versions of node.js
+In Debian based distributions, there is a name clash with another utility called `node`. The
+suggested solution is to also install the `nodejs-legacy` apt package, which renames `node` to
+`nodejs`.
+
+```
+apt-get install nodejs-legacy npm
+nodejs --version
+npm --version
+```
+
+
+<div class="alert alert-info">If you need to run different versions of node.js
   in your local environment, consider installing
   <a href="https://github.com/creationix/nvm" title="Node Version Manager Github Repo link">
     Node Version Manager (nvm)
@@ -118,15 +129,16 @@ Once you have Node.js installed on your machine you can download the tool depend
 npm install
 ```
 
-This command will download the following tools, into the `node_modules` directory:
+This command reads angular-phonecat's `package.json` file and downloads the following tools
+into the `node_modules` directory:
 
 - [Bower][bower] - client-side code package manager
 - [Http-Server][http-server] - simple local static web server
 - [Karma][karma] - unit test runner
-- [Protractor][protractor] - end 2 end test runner
+- [Protractor][protractor] - end to end (E2E) test runner
 
 Running `npm install` will also automatically use bower to download the Angular framework into the
-`bower_components` directory.
+`app/bower_components` directory.
 
 <div class="alert alert-info">
   Note the angular-phonecat project is setup to install and run these utilities via npm scripts.
@@ -139,7 +151,7 @@ tasks that you will need while developing:
 
 - `npm start` : start a local development web-server
 - `npm test` : start the Karma unit test runner
-- `npm run protractor` : run the Protractor end 2 end tests
+- `npm run protractor` : run the Protractor end to end (E2E) tests
 - `npm run update-webdriver` : install the drivers needed by Protractor
 
 ### Install Helper Tools (optional)
@@ -149,7 +161,7 @@ globally and run directly from a terminal/command prompt. You don't need to do t
 tutorial, but if you decide you do want to run them directly, you can install these modules globally
 using, `sudo npm install -g ...`.
 
-For instance to install the Bower command line executable you would do:
+For instance, to install the Bower command line executable you would do:
 
 ```
 sudo npm install -g bower
@@ -184,6 +196,11 @@ You can now browse to the application at:
 ```
 http://localhost:8000/app/index.html
 ```
+
+<div class="alert alert-info">
+To serve the web app on a different ip address or port, edit the "start" script within package.json.
+You can use `-a` to set the address and `-p` to set the port.
+</div>
 
 ### Running Unit Tests
 
@@ -254,6 +271,7 @@ It is good to run the end to end tests whenever you make changes to the HTML vie
 that the application as a whole is executing correctly.  It is very common to run End to End tests
 before pushing a new commit of changes to a remote repository.
 
+Now that you have set up your local machine, let's get started with the tutorial: {@link step_00 Step 0 - Bootstrapping}
 
 [git]: http://git-scm.com/
 [node]: http://nodejs.org/
