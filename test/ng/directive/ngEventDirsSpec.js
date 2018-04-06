@@ -12,15 +12,20 @@ describe('event directives', function() {
   describe('ngSubmit', function() {
 
     it('should get called on form submit', inject(function($rootScope, $compile) {
-      element = $compile('<form action="/foo" ng-submit="submitted = true">' +
-        '<input type="submit"/>' +
+      element = $compile(
+        '<form action="/foo" ng-submit="submitted = true">' +
+          '<input type="submit" />' +
         '</form>')($rootScope);
       $rootScope.$digest();
+
+      // Support: Chrome 60+
+      // We need to add the form to the DOM in order for `submit` events to be properly fired.
+      window.document.body.appendChild(element[0]);
 
       // prevent submit within the test harness
       element.on('submit', function(e) { e.preventDefault(); });
 
-      expect($rootScope.submitted).not.toBeDefined();
+      expect($rootScope.submitted).toBeUndefined();
 
       browserTrigger(element.children()[0]);
       expect($rootScope.submitted).toEqual(true);
@@ -33,15 +38,20 @@ describe('event directives', function() {
         }
       };
 
-      element = $compile('<form action="/foo" ng-submit="formSubmission($event)">' +
-        '<input type="submit"/>' +
+      element = $compile(
+        '<form action="/foo" ng-submit="formSubmission($event)">' +
+          '<input type="submit" />' +
         '</form>')($rootScope);
       $rootScope.$digest();
+
+      // Support: Chrome 60+ (on Windows)
+      // We need to add the form to the DOM in order for `submit` events to be properly fired.
+      window.document.body.appendChild(element[0]);
 
       // prevent submit within the test harness
       element.on('submit', function(e) { e.preventDefault(); });
 
-      expect($rootScope.formSubmitted).not.toBeDefined();
+      expect($rootScope.formSubmitted).toBeUndefined();
 
       browserTrigger(element.children()[0]);
       expect($rootScope.formSubmitted).toEqual('foo');
@@ -78,7 +88,7 @@ describe('event directives', function() {
     it('should call the listener synchronously inside of $apply if outside of $apply',
         inject(function($rootScope, $compile) {
       element = $compile('<input type="text" ng-focus="focus()" ng-model="value">')($rootScope);
-      $rootScope.focus = jasmine.createSpy('focus').andCallFake(function() {
+      $rootScope.focus = jasmine.createSpy('focus').and.callFake(function() {
         $rootScope.value = 'newValue';
       });
 
@@ -90,22 +100,12 @@ describe('event directives', function() {
 
   });
 
-  describe('security', function() {
+  describe('DOM event object', function() {
     it('should allow access to the $event object', inject(function($rootScope, $compile) {
       var scope = $rootScope.$new();
       element = $compile('<button ng-click="e = $event">BTN</button>')(scope);
       element.triggerHandler('click');
       expect(scope.e.target).toBe(element[0]);
-    }));
-
-    it('should block access to DOM nodes (e.g. exposed via $event)', inject(function($rootScope, $compile) {
-      var scope = $rootScope.$new();
-      element = $compile('<button ng-click="e = $event.target">BTN</button>')(scope);
-      expect(function() {
-        element.triggerHandler('click');
-      }).toThrowMinErr(
-              '$parse', 'isecdom', 'Referencing DOM nodes in Angular expressions is disallowed! ' +
-              'Expression: e = $event.target');
     }));
   });
 
@@ -139,7 +139,7 @@ describe('event directives', function() {
     it('should call the listener synchronously inside of $apply if outside of $apply',
         inject(function($rootScope, $compile) {
       element = $compile('<input type="text" ng-blur="blur()" ng-model="value">')($rootScope);
-      $rootScope.blur = jasmine.createSpy('blur').andCallFake(function() {
+      $rootScope.blur = jasmine.createSpy('blur').and.callFake(function() {
         $rootScope.value = 'newValue';
       });
 

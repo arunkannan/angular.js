@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script for updating the Angular bower repos from current local build.
+# Script for updating the AngularJS bower repos from current local build.
 
 echo "#################################"
 echo "#### Update bower ###############"
@@ -14,8 +14,9 @@ function init {
   TMP_DIR=$(resolveDir ../../tmp)
   BUILD_DIR=$(resolveDir ../../build)
   NEW_VERSION=$(cat $BUILD_DIR/version.txt)
-  # get the npm dist-tag from a custom property (distTag) in package.json
-  DIST_TAG=$(readJsonProp "package.json" "distTag")
+  PROJECT_DIR=$(resolveDir ../..)
+  # get the dist-tag for this release from a custom property (distTag) in package.json
+  DIST_TAG=$(readJsonProp "$PROJECT_DIR/package.json" "distTag")
 }
 
 
@@ -26,7 +27,7 @@ function prepare {
   for repo in "${REPOS[@]}"
   do
     echo "-- Cloning bower-$repo"
-    git clone git@github.com:angular/bower-$repo.git $TMP_DIR/bower-$repo
+    git clone git@github.com:angular/bower-$repo.git $TMP_DIR/bower-$repo --depth=1
   done
 
 
@@ -95,9 +96,9 @@ function publish {
     git push origin master
     git push origin v$NEW_VERSION
 
-    # don't publish every build to npm
+    # don't publish every build to the npm repository
     if [ "${NEW_VERSION/+sha}" = "$NEW_VERSION" ] ; then
-      echo "-- Publishing to npm as $DIST_TAG"
+      echo "-- Publishing to the npm repository as $DIST_TAG"
       npm publish --tag=$DIST_TAG
     fi
 
